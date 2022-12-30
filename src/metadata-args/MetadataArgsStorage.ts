@@ -21,6 +21,7 @@ import { TreeMetadataArgs } from "./TreeMetadataArgs"
 import { UniqueMetadataArgs } from "./UniqueMetadataArgs"
 import { CheckMetadataArgs } from "./CheckMetadataArgs"
 import { ExclusionMetadataArgs } from "./ExclusionMetadataArgs"
+import { CustomDatabaseObjectArgs } from "./CustomDatabaseObjectArgs"
 
 /**
  * Storage all metadatas args of all available types: tables, columns, subscribers, relations, etc.
@@ -54,10 +55,15 @@ export class MetadataArgsStorage {
     readonly embeddeds: EmbeddedMetadataArgs[] = []
     readonly inheritances: InheritanceMetadataArgs[] = []
     readonly discriminatorValues: DiscriminatorValueMetadataArgs[] = []
+    readonly customDatabaseObjects: CustomDatabaseObjectArgs[] = []
 
     // -------------------------------------------------------------------------
     // Public Methods
     // -------------------------------------------------------------------------
+
+    filterCustomDatabaseObjects(target: Function): CustomDatabaseObjectArgs[] {
+        return this.filterByTarget(this.customDatabaseObjects, target)
+    }
 
     filterTables(target: Function | string): TableMetadataArgs[]
     filterTables(target: (Function | string)[]): TableMetadataArgs[]

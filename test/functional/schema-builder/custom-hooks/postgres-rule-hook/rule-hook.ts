@@ -135,5 +135,14 @@ describe("schema builder > custom hooks > Postgres rule hook", () => {
         })
         beforeEach(() => reloadTestingDatabases(connections))
         after(() => closeTestingConnections(connections))
+
+        it("should generate migrations", async () => {
+            const sqlInMemory = await connections[0].driver
+                .createSchemaBuilder()
+                .log()
+
+            sqlInMemory.upQueries.length.should.be.greaterThan(0)
+            sqlInMemory.downQueries.length.should.be.greaterThan(0)
+        })
     })
 })

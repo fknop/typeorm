@@ -357,7 +357,7 @@ export abstract class BaseQueryRunner {
         )
     }
 
-    protected getTypeormMetadataTableName(): string {
+    getTypeormMetadataTableName(): string {
         const options = <
             SqlServerConnectionOptions | PostgresConnectionOptions
         >this.connection.driver.options
@@ -412,7 +412,7 @@ export abstract class BaseQueryRunner {
     /**
      * Generates SQL query to insert a record into typeorm metadata table.
      */
-    protected insertTypeormMetadataSql({
+    insertTypeormMetadataSql({
         database,
         schema,
         table,
@@ -447,7 +447,7 @@ export abstract class BaseQueryRunner {
     /**
      * Generates SQL query to delete a record from typeorm metadata table.
      */
-    protected deleteTypeormMetadataSql({
+    deleteTypeormMetadataSql({
         database,
         schema,
         table,
