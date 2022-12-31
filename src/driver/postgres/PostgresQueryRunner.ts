@@ -2937,7 +2937,7 @@ export class PostgresQueryRunner
 
         const up = this.createViewIndexSql(view, index)
         const down = this.dropIndexSql(view, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         view.addIndex(index)
     }
 
@@ -3013,7 +3013,7 @@ export class PostgresQueryRunner
 
         const up = this.dropIndexSql(view, index)
         const down = this.createViewIndexSql(view, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         view.removeIndex(index)
     }
 

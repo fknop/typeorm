@@ -130,7 +130,9 @@ export class RdbmsSchemaBuilder implements SchemaBuilder {
     ): Promise<void> {
         if (
             this.viewEntityToSyncMetadatas.length > 0 ||
-            this.hasGeneratedColumns()
+            this.hasGeneratedColumns() ||
+            (this.connection.options.schemaBuilderHooks &&
+                this.connection.options.schemaBuilderHooks.length > 0)
         ) {
             await this.createTypeormMetadataTable(queryRunner)
         }
