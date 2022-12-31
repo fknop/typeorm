@@ -292,7 +292,7 @@ export class AuroraMysqlQueryRunner
             ? `CREATE DATABASE IF NOT EXISTS \`${database}\``
             : `CREATE DATABASE \`${database}\``
         const down = `DROP DATABASE \`${database}\``
-        await this.executeQueries(new Query(up), new Query(down))
+        await this.executeSchemaBuilderQueries(new Query(up), new Query(down))
     }
 
     /**
@@ -303,7 +303,7 @@ export class AuroraMysqlQueryRunner
             ? `DROP DATABASE IF EXISTS \`${database}\``
             : `DROP DATABASE \`${database}\``
         const down = `CREATE DATABASE \`${database}\``
-        await this.executeQueries(new Query(up), new Query(down))
+        await this.executeSchemaBuilderQueries(new Query(up), new Query(down))
     }
 
     /**
@@ -361,7 +361,7 @@ export class AuroraMysqlQueryRunner
                 downQueries.push(this.dropForeignKeySql(table, foreignKey)),
             )
 
-        return this.executeQueries(upQueries, downQueries)
+        return this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -398,7 +398,7 @@ export class AuroraMysqlQueryRunner
         upQueries.push(this.dropTableSql(table))
         downQueries.push(this.createTableSql(table, createForeignKeys))
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -416,7 +416,7 @@ export class AuroraMysqlQueryRunner
         downQueries.push(this.dropViewSql(view))
         if (syncWithMetadata)
             downQueries.push(await this.deleteViewDefinitionSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -432,7 +432,7 @@ export class AuroraMysqlQueryRunner
         upQueries.push(this.dropViewSql(view))
         downQueries.push(await this.insertViewDefinitionSql(view))
         downQueries.push(this.createViewSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -551,7 +551,7 @@ export class AuroraMysqlQueryRunner
             foreignKey.name = newForeignKeyName
         })
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         // rename old table and replace it in cached tabled;
         oldTable.name = newTable.name
@@ -722,7 +722,7 @@ export class AuroraMysqlQueryRunner
             )
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         clonedTable.addColumn(column)
         this.replaceCachedTable(table, clonedTable)
@@ -1184,7 +1184,7 @@ export class AuroraMysqlQueryRunner
             }
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -1401,7 +1401,7 @@ export class AuroraMysqlQueryRunner
             ),
         )
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         clonedTable.removeColumn(column)
         this.replaceCachedTable(table, clonedTable)
@@ -1434,7 +1434,7 @@ export class AuroraMysqlQueryRunner
         const up = this.createPrimaryKeySql(table, columnNames)
         const down = this.dropPrimaryKeySql(table)
 
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         clonedTable.columns.forEach((column) => {
             if (columnNames.find((columnName) => columnName === column.name))
                 column.isPrimary = true
@@ -1561,7 +1561,7 @@ export class AuroraMysqlQueryRunner
             changedGeneratedColumn!.generationStrategy = "increment"
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -1577,7 +1577,7 @@ export class AuroraMysqlQueryRunner
             table,
             table.primaryColumns.map((column) => column.name),
         )
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.primaryColumns.forEach((column) => {
             column.isPrimary = false
         })
@@ -1731,7 +1731,7 @@ export class AuroraMysqlQueryRunner
 
         const up = this.createForeignKeySql(table, foreignKey)
         const down = this.dropForeignKeySql(table, foreignKey)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addForeignKey(foreignKey)
     }
 
@@ -1768,7 +1768,7 @@ export class AuroraMysqlQueryRunner
 
         const up = this.dropForeignKeySql(table, foreignKey)
         const down = this.createForeignKeySql(table, foreignKey)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeForeignKey(foreignKey)
     }
 
@@ -1801,7 +1801,7 @@ export class AuroraMysqlQueryRunner
 
         const up = this.createIndexSql(table, index)
         const down = this.dropIndexSql(table, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addIndex(index, true)
     }
 
@@ -1841,7 +1841,7 @@ export class AuroraMysqlQueryRunner
 
         const up = this.dropIndexSql(table, index)
         const down = this.createIndexSql(table, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeIndex(index, true)
     }
 

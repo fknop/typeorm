@@ -429,7 +429,7 @@ export class CockroachQueryRunner
             ifNotExist ? "IF NOT EXISTS " : ""
         } "${database}"`
         const down = `DROP DATABASE "${database}"`
-        await this.executeQueries(new Query(up), new Query(down))
+        await this.executeSchemaBuilderQueries(new Query(up), new Query(down))
     }
 
     /**
@@ -438,7 +438,7 @@ export class CockroachQueryRunner
     async dropDatabase(database: string, ifExist?: boolean): Promise<void> {
         const up = `DROP DATABASE ${ifExist ? "IF EXISTS " : ""} "${database}"`
         const down = `CREATE DATABASE "${database}"`
-        await this.executeQueries(new Query(up), new Query(down))
+        await this.executeSchemaBuilderQueries(new Query(up), new Query(down))
     }
 
     /**
@@ -457,7 +457,7 @@ export class CockroachQueryRunner
             ? `CREATE SCHEMA IF NOT EXISTS "${schema}"`
             : `CREATE SCHEMA "${schema}"`
         const down = `DROP SCHEMA "${schema}" CASCADE`
-        await this.executeQueries(new Query(up), new Query(down))
+        await this.executeSchemaBuilderQueries(new Query(up), new Query(down))
     }
 
     /**
@@ -477,7 +477,7 @@ export class CockroachQueryRunner
             ? `DROP SCHEMA IF EXISTS "${schema}" ${isCascade ? "CASCADE" : ""}`
             : `DROP SCHEMA "${schema}" ${isCascade ? "CASCADE" : ""}`
         const down = `CREATE SCHEMA "${schema}"`
-        await this.executeQueries(new Query(up), new Query(down))
+        await this.executeSchemaBuilderQueries(new Query(up), new Query(down))
     }
 
     /**
@@ -576,7 +576,7 @@ export class CockroachQueryRunner
             downQueries.push(deleteQuery)
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -672,7 +672,7 @@ export class CockroachQueryRunner
             downQueries.push(insertQuery)
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -688,9 +688,10 @@ export class CockroachQueryRunner
         if (syncWithMetadata)
             upQueries.push(await this.insertViewDefinitionSql(view))
         downQueries.push(this.dropViewSql(view))
+
         if (syncWithMetadata)
             downQueries.push(await this.deleteViewDefinitionSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -706,7 +707,7 @@ export class CockroachQueryRunner
         upQueries.push(this.dropViewSql(view))
         downQueries.push(await this.insertViewDefinitionSql(view))
         downQueries.push(this.createViewSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -900,7 +901,7 @@ export class CockroachQueryRunner
             foreignKey.name = newForeignKeyName
         })
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -1081,7 +1082,7 @@ export class CockroachQueryRunner
             )
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         clonedTable.addColumn(column)
         this.replaceCachedTable(table, clonedTable)
@@ -1715,7 +1716,7 @@ export class CockroachQueryRunner
             }
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -1922,7 +1923,7 @@ export class CockroachQueryRunner
             downQueries.push(insertQuery)
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         clonedTable.removeColumn(column)
         this.replaceCachedTable(table, clonedTable)
@@ -1962,7 +1963,7 @@ export class CockroachQueryRunner
         })
         const down = this.dropPrimaryKeySql(clonedTable)
 
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -2041,7 +2042,7 @@ export class CockroachQueryRunner
             ),
         )
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -2061,7 +2062,7 @@ export class CockroachQueryRunner
             table.primaryColumns.map((column) => column.name),
             constraintName,
         )
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.primaryColumns.forEach((column) => {
             column.isPrimary = false
         })
@@ -2090,7 +2091,7 @@ export class CockroachQueryRunner
         // CockroachDB creates index for UNIQUE constraint.
         // We must use DROP INDEX ... CASCADE instead of DROP CONSTRAINT.
         const down = this.dropIndexSql(table, uniqueConstraint)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addUniqueConstraint(uniqueConstraint)
     }
 
@@ -2128,7 +2129,7 @@ export class CockroachQueryRunner
         // We must use DROP INDEX ... CASCADE instead of DROP CONSTRAINT.
         const up = this.dropIndexSql(table, uniqueConstraint)
         const down = this.createUniqueConstraintSql(table, uniqueConstraint)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeUniqueConstraint(uniqueConstraint)
     }
 
@@ -2165,7 +2166,7 @@ export class CockroachQueryRunner
 
         const up = this.createCheckConstraintSql(table, checkConstraint)
         const down = this.dropCheckConstraintSql(table, checkConstraint)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addCheckConstraint(checkConstraint)
     }
 
@@ -2202,7 +2203,7 @@ export class CockroachQueryRunner
 
         const up = this.dropCheckConstraintSql(table, checkConstraint)
         const down = this.createCheckConstraintSql(table, checkConstraint)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeCheckConstraint(checkConstraint)
     }
 
@@ -2289,7 +2290,7 @@ export class CockroachQueryRunner
 
         const up = this.createForeignKeySql(table, foreignKey)
         const down = this.dropForeignKeySql(table, foreignKey)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addForeignKey(foreignKey)
     }
 
@@ -2325,7 +2326,7 @@ export class CockroachQueryRunner
 
         const up = this.dropForeignKeySql(table, foreignKey)
         const down = this.createForeignKeySql(table, foreignKey)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeForeignKey(foreignKey)
     }
 
@@ -2365,12 +2366,12 @@ export class CockroachQueryRunner
             // CockroachDB also creates index for UNIQUE constraints.
             // We can't drop UNIQUE constraint with DROP CONSTRAINT. We must use DROP INDEX ... CASCADE instead.
             const down = this.dropIndexSql(table, unique)
-            await this.executeQueries(up, down)
+            await this.executeSchemaBuilderQueries(up, down)
             table.addUniqueConstraint(unique)
         } else {
             const up = this.createIndexSql(table, index)
             const down = this.dropIndexSql(table, index)
-            await this.executeQueries(up, down)
+            await this.executeSchemaBuilderQueries(up, down)
             table.addIndex(index)
         }
     }
@@ -2410,7 +2411,7 @@ export class CockroachQueryRunner
 
         const up = this.dropIndexSql(table, index)
         const down = this.createIndexSql(table, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeIndex(index)
     }
 

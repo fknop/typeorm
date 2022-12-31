@@ -334,7 +334,7 @@ export abstract class AbstractSqliteQueryRunner
             downQueries.push(deleteQuery)
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -392,7 +392,7 @@ export abstract class AbstractSqliteQueryRunner
             downQueries.push(insertQuery)
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -409,7 +409,7 @@ export abstract class AbstractSqliteQueryRunner
         downQueries.push(this.dropViewSql(view))
         if (syncWithMetadata)
             downQueries.push(this.deleteViewDefinitionSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -425,7 +425,7 @@ export abstract class AbstractSqliteQueryRunner
         upQueries.push(this.dropViewSql(view))
         downQueries.push(this.insertViewDefinitionSql(view))
         downQueries.push(this.createViewSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -453,7 +453,7 @@ export abstract class AbstractSqliteQueryRunner
                 newTableName,
             )} RENAME TO ${this.escapePath(oldTable.name)}`,
         )
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
 
         // rename unique constraints
         newTable.uniques.forEach((unique) => {
@@ -1097,7 +1097,7 @@ export abstract class AbstractSqliteQueryRunner
 
         const up = this.createIndexSql(table, index)
         const down = this.dropIndexSql(index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addIndex(index)
     }
 
@@ -1137,7 +1137,7 @@ export abstract class AbstractSqliteQueryRunner
 
         const up = this.dropIndexSql(index)
         const down = this.createIndexSql(table, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeIndex(index)
     }
 
@@ -2217,7 +2217,7 @@ export abstract class AbstractSqliteQueryRunner
                 downQueries.push(revertDeleteQuery)
             })
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         this.replaceCachedTable(oldTable, newTable)
     }
 

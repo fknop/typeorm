@@ -428,7 +428,10 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         if (!ifNotExist || (ifNotExist && !exist)) {
             const up = `CREATE SCHEMA "${schema}"`
             const down = `DROP SCHEMA "${schema}" CASCADE`
-            await this.executeQueries(new Query(up), new Query(down))
+            await this.executeSchemaBuilderQueries(
+                new Query(up),
+                new Query(down),
+            )
         }
     }
 
@@ -454,7 +457,10 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         if (!ifExist || (ifExist && exist)) {
             const up = `DROP SCHEMA "${schema}" ${isCascade ? "CASCADE" : ""}`
             const down = `CREATE SCHEMA "${schema}"`
-            await this.executeQueries(new Query(up), new Query(down))
+            await this.executeSchemaBuilderQueries(
+                new Query(up),
+                new Query(down),
+            )
         }
     }
 
@@ -498,7 +504,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
             })
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -543,7 +549,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         upQueries.push(this.dropTableSql(table))
         downQueries.push(this.createTableSql(table, createForeignKeys))
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -561,7 +567,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         downQueries.push(this.dropViewSql(view))
         if (syncWithMetadata)
             downQueries.push(await this.deleteViewDefinitionSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -577,7 +583,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         upQueries.push(this.dropViewSql(view))
         downQueries.push(await this.insertViewDefinitionSql(view))
         downQueries.push(this.createViewSql(view))
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
     }
 
     /**
@@ -781,7 +787,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
             downQueries.push(this.dropIndexSql(newTable, index))
         })
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         // rename old table and replace it in cached tabled;
         oldTable.name = newTable.name
@@ -978,7 +984,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
             downQueries.push(this.dropIndexSql(table, uniqueIndex))
         }
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         clonedTable.addColumn(column)
         this.replaceCachedTable(table, clonedTable)
@@ -1480,7 +1486,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
                 }
             }
 
-            await this.executeQueries(upQueries, downQueries)
+            await this.executeSchemaBuilderQueries(upQueries, downQueries)
             this.replaceCachedTable(table, clonedTable)
         }
     }
@@ -1736,7 +1742,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         upQueries.push(new Query(this.dropColumnSql(table, column)))
         downQueries.push(new Query(this.addColumnSql(table, column)))
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
 
         clonedTable.removeColumn(column)
         this.replaceCachedTable(table, clonedTable)
@@ -1775,7 +1781,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
         })
         const down = this.dropPrimaryKeySql(clonedTable)
 
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -1924,7 +1930,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
             )
         })
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         this.replaceCachedTable(table, clonedTable)
     }
 
@@ -2023,7 +2029,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
             )
         })
 
-        await this.executeQueries(upQueries, downQueries)
+        await this.executeSchemaBuilderQueries(upQueries, downQueries)
         table.primaryColumns.forEach((column) => {
             column.isPrimary = false
         })
@@ -2098,7 +2104,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
 
         const up = this.createCheckConstraintSql(table, checkConstraint)
         const down = this.dropCheckConstraintSql(table, checkConstraint)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addCheckConstraint(checkConstraint)
     }
 
@@ -2135,7 +2141,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
 
         const up = this.dropCheckConstraintSql(table, checkConstraint)
         const down = this.createCheckConstraintSql(table, checkConstraint)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeCheckConstraint(checkConstraint)
     }
 
@@ -2222,7 +2228,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
 
         const up = this.createForeignKeySql(table, foreignKey)
         const down = this.dropForeignKeySql(table, foreignKey)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addForeignKey(foreignKey)
     }
 
@@ -2259,7 +2265,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
 
         const up = this.dropForeignKeySql(table, foreignKey)
         const down = this.createForeignKeySql(table, foreignKey)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeForeignKey(foreignKey)
     }
 
@@ -2292,7 +2298,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
 
         const up = this.createIndexSql(table, index)
         const down = this.dropIndexSql(table, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.addIndex(index)
     }
 
@@ -2332,7 +2338,7 @@ export class SapQueryRunner extends BaseQueryRunner implements QueryRunner {
 
         const up = this.dropIndexSql(table, index)
         const down = this.createIndexSql(table, index)
-        await this.executeQueries(up, down)
+        await this.executeSchemaBuilderQueries(up, down)
         table.removeIndex(index)
     }
 
